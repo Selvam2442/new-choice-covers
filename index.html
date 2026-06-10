@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alan's Custom Covers - Ultimate CSS Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF3366;
+            --primary-hover: #E62E5C;
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            background: linear-gradient(to right, #FF3366, #FF9933);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* --- THE PURE CSS HARDWARE ENGINE --- */
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .phone-mockup {
+            width: 280px;
+            height: 580px;
+            background: #cbd5e1;
+            border-radius: 48px;
+            border: 16px solid #000000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dynamic CSS Camera Shapes */
+        .camera-bump {
+            position: absolute;
+            background: #000;
+            z-index: 10;
+            border: 3px solid #1f2937;
+            box-shadow: inset 0 0 12px rgba(255,255,255,0.1), 0 5px 15px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 6px;
+        }
+
+        /* Simulated Lenses inside the bump */
+        .camera-bump::before, .camera-bump::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            background: #111;
+            border-radius: 50%;
+            border: 2px solid #333;
+            box-shadow: inset 0 0 4px #000;
+        }
+
+        /* Shape 1: Apple / Square Top Left */
+        .shape-square-tl { top: 18px; left: 18px; width: 75px; height: 75px; border-radius: 22px; }
+        
+        /* Shape 2: Samsung / Vertical Pill */
+        .shape-pill-tl { top: 20px; left: 20px; width: 36px; height: 110px; border-radius: 18px; flex-direction: column; }
+        
+        /* Shape 3: OnePlus/Realme / Giant Center Circle */
+        .shape-circle-c { top: 30px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; border-radius: 50%; }
+        
+        /* Shape 4: Vivo/iQOO / Large Matrix Rectangle */
+        .shape-matrix-tl { top: 18px; left: 18px; width: 85px; height: 110px; border-radius: 16px; }
+        
+        /* Shape 5: Nothing / Dual Pill */
+        .shape-nothing { top: 20px; left: 20px; width: 40px; height: 80px; border-radius: 20px; flex-direction: column; }
+        
+        /* Shape 6: Pixel/Poco / Horizontal Visor */
+        .shape-visor { top: 30px; left: 0; width: 100%; height: 50px; border-radius: 0; border-left: none; border-right: none; }
+
+        .image-viewport {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            cursor: grab;
+            background: #e2e8f0;
+        }
+
+        .image-viewport:active { cursor: grabbing; }
+
+        #design-preview {
+            position: absolute;
+            transform-origin: center center;
+            display: none;
+            pointer-events: none;
+        }
+
+        .placeholder-ui {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #64748b;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* --- CONTROLS --- */
+        .controls-section {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-group { margin-bottom: 25px; }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 15px;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: white;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        select:focus { border-color: var(--primary); }
+
+        .slider-container {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            margin-top: 20px;
+            display: none;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            margin-top: 10px;
+        }
+
+        .btn-order {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #128C7E, #25D366);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s;
+            margin-top: 30px;
+        }
+
+        .btn-order:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(37, 211, 102, 0.4); }
+        .btn-order:disabled { background: #334155; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .phone-mockup { width: 240px; height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>ALAN'S CUSTOM STUDIO</h1>
+        <p style="color: var(--text-muted); margin-top: 5px;">The Ultimate CSS Preview Engine</p>
+    </div>
+
+    <div class="container">
+        <!-- LIVE PREVIEW ENGINE -->
+        <div class="preview-section">
+            <div class="phone-mockup" id="capture-area">
+                <!-- The Dynamic CSS Camera -->
+                <div id="camera-bump" class="camera-bump shape-square-tl"></div>
+                
+                <div class="image-viewport" id="viewport">
+                    <img id="design-preview" src="" alt="Custom Layer">
+                </div>
+
+                <div id="placeholder-text" class="placeholder-ui">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🎨</div>
+                    <h3 style="color: #0f172a;">Upload Design</h3>
+                </div>
+            </div>
+
+            <div class="slider-container" id="adj-panel">
+                <label style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Image Scale Adjustment</label>
+                <input type="range" id="zoom-slider" min="0.5" max="3" step="0.01" value="1">
+                <p style="font-size: 12px; text-align: center; margin-top: 10px; color: var(--primary);">Drag image inside case to reposition</p>
+            </div>
+        </div>
+
+        <!-- CONTROLS & MASSIVE DATABASE -->
+        <div class="controls-section">
+            <div class="form-group">
+                <label>1. Select Brand</label>
+                <select id="brand" onchange="loadModels()">
+                    <option value="">-- Choose Brand --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>2. Select Exact Model</label>
+                <select id="model" disabled onchange="updateCameraEngine()">
+                    <option value="">-- Choose Brand First --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>3. Upload Artwork</label>
+                <input type="file" id="image-upload" accept="image/*" onchange="handleImage(event)">
+            </div>
+
+            <button class="btn-order" id="order-btn" onclick="processOrder()" disabled>
+                Confirm & Send via WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const WHATSAPP_NUMBER = "919876543210"; 
+
+        // THE ULTIMATE PHONE DATABASE
+        const phoneData = {
+            "Apple": [
+                "iPhone (1st Gen)", "iPhone 3G", "iPhone 3GS", "iPhone 4", "iPhone 4S", "iPhone 5", "iPhone 5C", "iPhone 5S", 
+                "iPhone 6", "iPhone 6 Plus", "iPhone 6S", "iPhone 6S Plus", "iPhone SE (1st Gen)", "iPhone 7", "iPhone 7 Plus", 
+                "iPhone 8", "iPhone 8 Plus", "iPhone X", "iPhone XS", "iPhone XS Max", "iPhone XR", "iPhone 11", "iPhone 11 Pro", 
+                "iPhone 11 Pro Max", "iPhone SE (2nd Gen)", "iPhone 12 Mini", "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max", 
+                "iPhone 13 Mini", "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max", "iPhone SE (3rd Gen)", "iPhone 14", 
+                "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max", "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", 
+                "iPhone 15 Pro Max", "iPhone 16", "iPhone 16 Plus", "iPhone 16 Pro", "iPhone 16 Pro Max", "iPhone 16e", 
+                "iPhone 17", "iPhone 17 Air", "iPhone 17 Pro", "iPhone 17 Pro Max", "iPhone 18", "iPhone 18 Air", "iPhone 18 Pro", "iPhone 18 Pro Max"
+            ],
+            "Samsung": [
+                "Galaxy S26 Ultra", "Galaxy S26+", "Galaxy S26", "Galaxy S25 Ultra", "Galaxy S25+", "Galaxy S25 FE", "Galaxy S25", 
+                "Galaxy S24 Ultra", "Galaxy S24+", "Galaxy S24 FE", "Galaxy S24", "Galaxy S23 Ultra", "Galaxy S23+", "Galaxy S23 FE", 
+                "Galaxy S22 Ultra", "Galaxy S21 Ultra", "Galaxy S20 Ultra", "Galaxy Note 20 Ultra", "Galaxy Note 10+", "Galaxy Note 9",
+                "Z Fold7", "Z Fold6", "Z Fold5", "Z Flip7", "Z Flip6", "Z Flip5", "Galaxy A56 5G", "Galaxy A55 5G", "Galaxy A54", 
+                "Galaxy A36 5G", "Galaxy A35", "Galaxy A16", "Galaxy A15", "Galaxy M56", "Galaxy M55", "Galaxy M35", "Galaxy F55", "Galaxy F34"
+            ],
+            "Vivo": [
+                "X200", "X100", "X90", "X80", "X70", "X Fold5", "X Fold3 Pro", "V50", "V40", "V30", "V29", "V27", "V25", "V23",
+                "Y300 Plus", "Y300 Pro", "Y300", "Y200 Pro", "Y200e", "Y200", "Y100", "Y58", "Y28s", "Y28e", "Y28", 
+                "T4 Ultra", "T4 Pro", "T4 Lite", "T4x", "T4", "T3 Ultra", "T3 Pro", "T3x", "T3 Lite", "T3", "T2 Pro"
+            ],
+            "iQOO": [
+                "iQOO 15", "iQOO 15R", "iQOO 13", "iQOO 12", "iQOO 11", "iQOO 9", "iQOO Neo 10", "iQOO Neo 10R", "iQOO Neo 9 Pro", 
+                "iQOO Z11x 5G", "iQOO Z10", "iQOO Z9s Pro", "iQOO Z9x 5G", "iQOO Z9"
+            ],
+            "Xiaomi / Redmi": [
+                "Xiaomi 15 Ultra", "Xiaomi 15 Pro", "Xiaomi 15", "Xiaomi 14 Ultra", "Xiaomi 14T Pro", "Xiaomi 14", "Xiaomi 13 Pro",
+                "Redmi Note 14 Pro+", "Redmi Note 14 Pro", "Redmi Note 14", "Redmi Note 13 Pro+", "Redmi Note 13 Pro", "Redmi Note 12 Pro+",
+                "Redmi K80 Pro", "Redmi K80", "Redmi K70 Pro", "Redmi 14C", "Redmi 13C"
+            ],
+            "POCO": [
+                "POCO F7 Ultra", "POCO F7 Pro", "POCO F7", "POCO F6 Pro", "POCO F6", "POCO X7 Pro", "POCO X7", "POCO X6 Pro", 
+                "POCO M7 Pro", "POCO M6 Pro", "POCO C75", "POCO C65"
+            ],
+            "OnePlus": [
+                "OnePlus 13", "OnePlus 12", "OnePlus 12R", "OnePlus 11", "OnePlus 11R", "OnePlus 10 Pro", "OnePlus 9 Pro",
+                "OnePlus Open 2", "OnePlus Open", "Nord 4", "Nord 3", "Nord CE 4", "Nord CE 3", "Nord N30"
+            ],
+            "Motorola": [
+                "Edge 70 Fusion", "Edge 70 Pro 5G", "Edge 60 Ultra", "Edge 60 Pro", "Edge 60 Fusion", "Edge 50 Ultra", "Edge 50 Pro",
+                "Moto G86 Power", "Moto G96 5G", "Moto G85", "Moto G84", "Moto G64", "Moto G45 5G", "Moto G32",
+                "Razr 60 Ultra", "Razr 60", "Razr 50 Ultra", "Razr 50", "ThinkPhone 25"
+            ],
+            "Oppo": [
+                "Find X8 Ultra", "Find X8 Pro", "Find X8", "Find X7 Ultra", "Find N5", "Find N3 Flip", 
+                "Reno 13 Pro", "Reno 13", "Reno 12 Pro", "Reno 12", "Reno 11 Pro", "F27 Pro+", "F27", "F25 Pro", "A80", "A79 5G", "K12"
+            ],
+            "Honor": [
+                "Magic 7 Pro", "Magic 7", "Magic 6 Pro", "Magic V4", "Magic V3", "Honor 300", "Honor 200", "Honor 100", "Honor X80", "Honor GT Pro"
+            ],
+            "Nothing / CMF": [
+                "Phone (3a) Pro", "Phone (3a)", "Phone (3)", "Phone (2a) Plus", "Phone (2a)", "Phone (2)", "Phone (1)",
+                "CMF Phone 2 Pro", "CMF Phone 2", "CMF Phone 1"
+            ]
+        };
+
+        // --- CORE APPLICATION LOGIC --- //
+        let scale = 1; let posX = 0; let posY = 0; let isDragging = false; let startX, startY;
+        const imgElement = document.getElementById('design-preview');
+        const viewport = document.getElementById('viewport');
+
+        window.onload = () => {
+            const brandSelect = document.getElementById('brand');
+            Object.keys(phoneData).forEach(brand => {
+                brandSelect.add(new Option(brand, brand));
+            });
+            setupDragEngine();
+        };
+
+        function loadModels() {
+            const brand = document.getElementById('brand').value;
+            const modelSelect = document.getElementById('model');
+            modelSelect.innerHTML = '<option value="">-- Choose Model --</option>';
+            
+            if (brand) {
+                modelSelect.disabled = false;
+                phoneData[brand].forEach(model => modelSelect.add(new Option(model, model)));
+            } else {
+                modelSelect.disabled = true;
+            }
+            updateCameraEngine();
+        }
+
+        // --- THE DYNAMIC CSS SHAPE ENGINE --- //
+        // Analyzes the brand/model and assigns the closest CSS camera module shape
+        function updateCameraEngine() {
+            const brand = document.getElementById('brand').value;
+            const model = document.getElementById('model').value;
+            const bump = document.getElementById('camera-bump');
+            
+            // Reset to default Apple-style square
+            let cssClass = "shape-square-tl"; 
+
+            if (brand === "Samsung" || brand === "Sony") {
+                cssClass = "shape-pill-tl";
+            } else if (brand === "OnePlus" || brand === "Honor" || brand === "Realme" || model.includes("Edge 50") || model.includes("Magic")) {
+                cssClass = "shape-circle-c";
+            } else if (brand === "Vivo" || brand === "iQOO" || brand === "Xiaomi / Redmi" || brand === "POCO") {
+                if (model.includes("X100") || model.includes("14 Ultra") || model.includes("Find X")) {
+                    cssClass = "shape-circle-c"; // Massive center circle flagships
+                } else if (model.includes("POCO") || model.includes("Pixel")) {
+                    cssClass = "shape-visor";
+                } else {
+                    cssClass = "shape-matrix-tl"; // Standard large rectangular block
+                }
+            } else if (brand === "Nothing / CMF" || brand === "Oppo") {
+                cssClass = "shape-nothing";
+            }
+
+            bump.className = `camera-bump ${cssClass}`;
+            checkReadyState();
+        }
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                imgElement.src = event.target.result;
+                imgElement.style.display = 'block';
+                document.getElementById('placeholder-text').style.display = 'none';
+                document.getElementById('adj-panel').style.display = 'block';
+                
+                // Reset Transforms
+                scale = 1; posX = 0; posY = 0;
+                document.getElementById('zoom-slider').value = 1;
+                
+                imgElement.onload = () => {
+                    imgElement.style.width = "100%";
+                    imgElement.style.height = "auto";
+                    if (imgElement.clientHeight < viewport.clientHeight) {
+                        imgElement.style.height = "100%";
+                        imgElement.style.width = "auto";
+                    }
+                    updateTransform();
+                }
+                checkReadyState();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateTransform() {
+            imgElement.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        }
+
+        document.getElementById('zoom-slider').addEventListener('input', (e) => {
+            scale = e.target.value;
+            updateTransform();
+        });
+
+        function setupDragEngine() {
+            viewport.addEventListener('pointerdown', (e) => {
+                if (!imgElement.src || imgElement.style.display === 'none') return;
+                isDragging = true;
+                viewport.setPointerCapture(e.pointerId);
+                startX = e.clientX - posX;
+                startY = e.clientY - posY;
+            });
+            viewport.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                posX = e.clientX - startX;
+                posY = e.clientY - startY;
+                updateTransform();
+            });
+            viewport.addEventListener('pointerup', (e) => {
+                isDragging = false;
+                viewport.releasePointerCapture(e.pointerId);
+            });
+        }
+
+        function checkReadyState() {
+            const brand = document.getElementById('brand').value;
+            const model = document.getElementById('model').value;
+            const image = document.getElementById('image-upload').value;
+            document.getElementById('order-btn').disabled = !(brand && model && image);
+        }
+
+        async function processOrder() {
+            const btn = document.getElementById('order-btn');
+            btn.innerHTML = "Rendering Final Output...";
+            btn.disabled = true;
+
+            try {
+                // Remove rounded corners temporarily for flat printing export
+                const captureArea = document.getElementById('capture-area');
+                captureArea.style.borderRadius = "0";
+                captureArea.style.border = "none";
+                
+                const canvas = await html2canvas(captureArea, { scale: 3, useCORS: true });
+                
+                // Restore UI
+                captureArea.style.borderRadius = "48px";
+                captureArea.style.border = "16px solid #000000";
+
+                const modelName = document.getElementById('model').value.replace(/\s+/g, '_');
+                const link = document.createElement('a');
+                link.download = `Alan_Custom_${modelName}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+
+                alert("🔥 PRINT FILE GENERATED!\n\nRedirecting to WhatsApp. Please attach the downloaded file in the chat to complete your order.");
+
+                const msg = encodeURIComponent(`Hi Alan! I am placing an order.\n\n📱 Brand: ${document.getElementById('brand').value}\n⚡ Model: ${document.getElementById('model').value}\n\n[Please find my design attached]`);
+                window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+
+            } catch (err) {
+                console.error(err);
+                alert("Rendering failed. Please try a different image.");
+                btn.innerHTML = "Confirm & Send via WhatsApp";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
